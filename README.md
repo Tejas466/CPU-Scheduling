@@ -1,4 +1,5 @@
 Scheduling Algorithm Simulator
+
 This project is a web-based simulation tool for various CPU scheduling algorithms. It supports multiple scheduling algorithms such as First-Come First-Serve (FCFS), Shortest Job First (SJF), Round Robin Scheduling (RRS), Longest Job First (LJF), Priority Scheduling, Longest Remaining Time First (LRTF), and Shortest Remaining Time First (SRTF). The simulator allows users to input processes with arrival times, burst times, and optionally priorities and quantum times depending on the algorithm chosen.
 
 Features
