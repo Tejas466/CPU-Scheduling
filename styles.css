@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #1a1a1a;
+    color: #f1f1f1;
+}
+
+.container {
+    width: 800px;
+    margin: 0 auto;
+    background-color: #333;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+}
+
+h1, h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #fdda44;
+}
+
+form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.process {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+label {
+    flex: 1;
+    margin-right: 10px;
+}
+
+input, select {
+    flex: 1;
+    padding: 8px;
+    background-color: #444;
+    color: #f1f1f1;
+    border: 1px solid #666;
+    border-radius: 4px;
+}
+
+button {
+    grid-column: span 2;
+    padding: 10px 15px;
+    background-color: #fdda44;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+
+button:hover {
+    background-color: #e6c136;
+}
+
+#chart {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border: 1px solid #666;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.ganttBlock {
+    width: 100%;
+    background-color: #f9b233;
+    color: #333;
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 3px;
+    position: relative;
+}
+
+.progressBar {
+    width: 0;
+    height: 100%;
+    background-color: #fdda44;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+#resultTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#resultTable th, #resultTable td {
+    border: 1px solid #666;
+    padding: 8px;
+    text-align: center;
+}
+
+#resultTable th {
+    background-color: #444;
+}
