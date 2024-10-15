@@ -6,23 +6,6 @@
     <title>CPU Scheduling Visualization</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Styles for the loading bar */
-        .loading-bar {
-            width: 100%;
-            background-color: #333;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            height: 20px;
-            margin: 5px 0;
-        }
-
-        .progress {
-            height: 100%;
-            background-color: #fdda44;
-            width: 0;
-            border-radius: 5px;
-        }
-
         /* Additional styles for chart and averages */
         #chartContainer {
             width: 100%;
@@ -33,6 +16,16 @@
         .averages {
             margin-top: 20px;
             font-size: 18px;
+        }
+
+        /* Styles for pie chart container */
+        #pieChartContainer {
+            margin-top: 20px;
+        }
+
+        /* Styles for Gantt chart container */
+        #ganttChartContainer {
+            margin-top: 20px;
         }
     </style>
     <!-- Add Chart.js library -->
@@ -67,10 +60,8 @@
             <div id="processContainer" class="processContainer">
                 <div class="process">
                     <label for="arrivalTime0">Arrival Time (P1):</label>
-                    <!-- Use min="0" to ensure non-negative values -->
                     <input type="number" id="arrivalTime0" name="arrivalTime0" min="0" required>
                     <label for="burstTime0">Burst Time (P1):</label>
-                    <!-- Use min="0" to ensure non-negative values -->
                     <input type="number" id="burstTime0" name="burstTime0" min="0" required>
                 </div>
             </div>
@@ -86,12 +77,10 @@
                     <th>Process</th>
                     <th>Arrival Time</th>
                     <th>Burst Time</th>
-                    <th>Start Time</th>
                     <th>Completion Time</th>
                     <th>Turnaround Time</th>
                     <th>Waiting Time</th>
                     <th>Priority</th>
-                    <th>Execution Progress</th>
                 </tr>
             </thead>
             <tbody>
@@ -102,10 +91,16 @@
             <p id="avgTurnaroundTime">Average Turnaround Time: N/A</p>
             <p id="avgWaitingTime">Average Waiting Time: N/A</p>
         </div>
+        <div id="ganttChartContainer" style="margin-top: 20px;">
+            <div id="ganttChart"></div>
+        </div>
 
-        <!-- Move the chart container here -->
         <div id="chartContainer">
-            <canvas id="performanceChart" width="400" height="200"></canvas>
+            <canvas id="performanceChart" width="300" height="100"></canvas>
+        </div>
+
+        <div id="pieChartContainer">
+            <canvas id="pieChart" width="150" height="50"></canvas>
         </div>
     </div>
     <script src="loading.js"></script>
