@@ -67,11 +67,14 @@
             <div id="processContainer" class="processContainer">
                 <div class="process">
                     <label for="arrivalTime0">Arrival Time (P1):</label>
-                    <input type="number" id="arrivalTime0" name="arrivalTime0" required>
+                    <!-- Use min="0" to ensure non-negative values -->
+                    <input type="number" id="arrivalTime0" name="arrivalTime0" min="0" required>
                     <label for="burstTime0">Burst Time (P1):</label>
-                    <input type="number" id="burstTime0" name="burstTime0" required>
+                    <!-- Use min="0" to ensure non-negative values -->
+                    <input type="number" id="burstTime0" name="burstTime0" min="0" required>
                 </div>
             </div>
+            
             <button type="button" id="addProcess">Add Process</button>
             <button type="submit">Calculate</button>
         </form>
