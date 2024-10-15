@@ -1,6 +1,11 @@
 let processCount = 1;
 
-document.getElementById("addProcess").addEventListener("click", function() {
+// Store the processes and their times
+let processesData = []; // Array to store process data
+let totalTurnaroundTime = 0; // Total Turnaround Time
+let totalWaitingTime = 0; // Total Waiting Time
+
+document.getElementById("addProcess").addEventListener("click", function () {
     const processContainer = document.getElementById("processContainer");
     const newProcess = document.createElement("div");
     newProcess.classList.add("process");
@@ -15,7 +20,7 @@ document.getElementById("addProcess").addEventListener("click", function() {
 });
 
 // Show or hide additional inputs based on the selected algorithm
-document.getElementById("algorithm").addEventListener("change", function() {
+document.getElementById("algorithm").addEventListener("change", function () {
     const selectedAlgorithm = this.value;
     const extraInputs = document.getElementById("extraInputs");
     const quantumInput = document.getElementById("quantumInput");
@@ -35,14 +40,14 @@ document.getElementById("algorithm").addEventListener("change", function() {
 });
 
 // Handle form submission
-document.getElementById("schedulingForm").addEventListener("submit", function(event) {
+document.getElementById("schedulingForm").addEventListener("submit", function (event) {
     event.preventDefault();
 
     // Clear previous results
     clearResultsTable();
 
     // Gather process data
-    const processes = [];
+    processesData = []; // Reset process data
     for (let i = 0; i < processCount; i++) {
         const arrivalTime = parseInt(document.getElementById(`arrivalTime${i}`).value);
         const burstTime = parseInt(document.getElementById(`burstTime${i}`).value);
@@ -52,26 +57,26 @@ document.getElementById("schedulingForm").addEventListener("submit", function(ev
         if (document.getElementById("algorithm").value === "priority") {
             process.priority = parseInt(document.getElementById(`priority`).value);
         }
-        processes.push(process);
+        processesData.push(process);
     }
 
     const selectedAlgorithm = document.getElementById("algorithm").value;
 
     if (selectedAlgorithm === "fcfs") {
-        fcfs(processes);
+        fcfs(processesData);
     } else if (selectedAlgorithm === "sjf") {
-        sjf(processes);
+        sjf(processesData);
     } else if (selectedAlgorithm === "rrs") {
         const timeQuantum = parseInt(document.getElementById("timeQuantum").value);
-        rrs(processes, timeQuantum);
+        rrs(processesData, timeQuantum);
     } else if (selectedAlgorithm === "ljf") {
-        ljf(processes);
+        ljf(processesData);
     } else if (selectedAlgorithm === "priority") {
-        priorityScheduling(processes);
+        priorityScheduling(processesData);
     } else if (selectedAlgorithm === "lrtf") {
-        lrtf(processes);
+        lrtf(processesData);
     } else if (selectedAlgorithm === "srtf") {
-        srtf(processes);
+        srtf(processesData);
     }
 });
 
@@ -94,7 +99,7 @@ function sjf(processes) {
 }
 
 // Round Robin Algorithm
-function rrs(processes, timeQuantum) {
+async function rrs(processes, timeQuantum) {
     let queue = [...processes];
     let currentTime = 0;
 
@@ -106,6 +111,10 @@ function rrs(processes, timeQuantum) {
             process.completionTime = process.startTime + executionTime;
             process.turnaroundTime = process.completionTime - process.arrivalTime;
             process.waitingTime = process.turnaroundTime - process.burstTime;
+
+            // Add to totals for average calculation
+            totalTurnaroundTime += process.turnaroundTime;
+            totalWaitingTime += process.waitingTime;
 
             // Display the results
             updateResultsTable(process);
@@ -120,9 +129,10 @@ function rrs(processes, timeQuantum) {
                 queue.push(process);
             }
         }
+        calculateAverages(processes.length); // Calculate averages after execution
     };
 
-    executeNextProcess();
+    await executeNextProcess();
 }
 
 // LJF Algorithm
@@ -159,12 +169,17 @@ async function executeProcesses(processes) {
         process.turnaroundTime = process.completionTime - process.arrivalTime;
         process.waitingTime = process.turnaroundTime - process.burstTime;
 
+        // Add to totals for average calculation
+        totalTurnaroundTime += process.turnaroundTime;
+        totalWaitingTime += process.waitingTime;
+
         updateResultsTable(process);
         currentTime = process.completionTime;
 
         // Animate the loading bar for this process
         await animateLoadingBar(process, process.burstTime);
     }
+    calculateAverages(processes.length); // Calculate averages after execution
 }
 
 // Update the results table after process completion
@@ -205,3 +220,64 @@ function animateLoadingBar(process, totalTime) {
         }, 1000); // Update every second
     });
 }
+
+// Calculate averages and update the display
+function calculateAverages(processCount) {
+    const avgTurnaroundTime = totalTurnaroundTime / processCount;
+    const avgWaitingTime = totalWaitingTime / processCount;
+
+    // Update averages in the UI
+    document.getElementById("avgTurnaroundTime").innerText = `Average Turnaround Time: ${avgTurnaroundTime.toFixed(2)}`;
+    document.getElementById("avgWaitingTime").innerText = `Average Waiting Time: ${avgWaitingTime.toFixed(2)}`;
+
+    // Call function to render the chart
+    renderChart(processesData); // Pass processes data to render the chart
+}
+
+// Function to render the chart
+// Function to render the chart
+function renderChart(processes) {
+    const ctx = document.getElementById("performanceChart").getContext("2d");
+
+    // Prepare data for the chart
+    const labels = processes.map(p => p.process); // Labels for each process
+    const turnaroundTimes = processes.map(p => p.turnaroundTime); // Turnaround times for each process
+    const waitingTimes = processes.map(p => p.waitingTime); // Waiting times for each process
+
+    // Destroy previous chart instance if it exists
+    if (window.performanceChart) {
+        window.performanceChart.destroy();
+    }
+
+    // Create a new chart
+    window.performanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Turnaround Time',
+                    data: turnaroundTimes,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Waiting Time',
+                    data: waitingTimes,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
