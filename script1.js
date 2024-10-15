@@ -9,11 +9,13 @@ document.getElementById("addProcess").addEventListener("click", function () {
     const processContainer = document.getElementById("processContainer");
     const newProcess = document.createElement("div");
     newProcess.classList.add("process");
+
+    // Dynamically add the arrivalTime and burstTime inputs with min="0" to prevent negative values
     newProcess.innerHTML = `
         <label for="arrivalTime${processCount}">Arrival Time (P${processCount + 1}):</label>
-        <input type="number" id="arrivalTime${processCount}" name="arrivalTime${processCount}" required>
+        <input type="number" id="arrivalTime${processCount}" name="arrivalTime${processCount}" min="0" required>
         <label for="burstTime${processCount}">Burst Time (P${processCount + 1}):</label>
-        <input type="number" id="burstTime${processCount}" name="burstTime${processCount}" required>
+        <input type="number" id="burstTime${processCount}" name="burstTime${processCount}" min="0" required>
     `;
     processContainer.appendChild(newProcess);
     processCount++;
@@ -39,20 +41,30 @@ document.getElementById("algorithm").addEventListener("change", function () {
     }
 });
 
-// Handle form submission
+// Handle form submission and ensure no negative values
 document.getElementById("schedulingForm").addEventListener("submit", function (event) {
     event.preventDefault();
 
     // Clear previous results
     clearResultsTable();
 
-    // Gather process data
+    // Gather process data and validate non-negative inputs
     processesData = []; // Reset process data
+    let valid = true;
+
     for (let i = 0; i < processCount; i++) {
         const arrivalTime = parseInt(document.getElementById(`arrivalTime${i}`).value);
         const burstTime = parseInt(document.getElementById(`burstTime${i}`).value);
+
+        // Validation: Ensure arrivalTime and burstTime are not negative
+        if (arrivalTime < 0 || burstTime < 0) {
+            alert(`Arrival Time and Burst Time should not be less than 0 for Process P${i + 1}.`);
+            valid = false;
+            break;
+        }
+
         const process = { process: `P${i + 1}`, arrivalTime, burstTime };
-        
+
         // Add priority if priority scheduling is selected
         if (document.getElementById("algorithm").value === "priority") {
             process.priority = parseInt(document.getElementById(`priority`).value);
@@ -60,8 +72,13 @@ document.getElementById("schedulingForm").addEventListener("submit", function (e
         processesData.push(process);
     }
 
+    if (!valid) {
+        return; // Stop further execution if invalid input is detected
+    }
+
     const selectedAlgorithm = document.getElementById("algorithm").value;
 
+    // Execute the relevant scheduling algorithm
     if (selectedAlgorithm === "fcfs") {
         fcfs(processesData);
     } else if (selectedAlgorithm === "sjf") {
@@ -235,7 +252,6 @@ function calculateAverages(processCount) {
 }
 
 // Function to render the chart
-// Function to render the chart
 function renderChart(processes) {
     const ctx = document.getElementById("performanceChart").getContext("2d");
 
@@ -280,4 +296,3 @@ function renderChart(processes) {
         }
     });
 }
-
