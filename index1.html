@@ -22,7 +22,21 @@
             width: 0;
             border-radius: 5px;
         }
+
+        /* Additional styles for chart and averages */
+        #chartContainer {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .averages {
+            margin-top: 20px;
+            font-size: 18px;
+        }
     </style>
+    <!-- Add Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -74,13 +88,23 @@
                     <th>Turnaround Time</th>
                     <th>Waiting Time</th>
                     <th>Priority</th>
-                    <th>Execution Progress</th> <!-- New column for execution progress -->
+                    <th>Execution Progress</th>
                 </tr>
             </thead>
             <tbody>
             </tbody>
         </table>
+
+        <div class="averages">
+            <p id="avgTurnaroundTime">Average Turnaround Time: N/A</p>
+            <p id="avgWaitingTime">Average Waiting Time: N/A</p>
+        </div>
+
+        <!-- Move the chart container here -->
+        <div id="chartContainer">
+            <canvas id="performanceChart" width="400" height="200"></canvas>
+        </div>
     </div>
-    <script src="script1.js"></script>
+    <script src="loading.js"></script>
 </body>
 </html>
