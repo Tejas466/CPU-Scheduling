@@ -1,16 +1,14 @@
 let processCount = 1;
-
-// Store the processes and their times
-let processesData = []; // Array to store process data
-let totalTurnaroundTime = 0; // Total Turnaround Time
-let totalWaitingTime = 0; // Total Waiting Time
+let processesData = [];
+let totalTurnaroundTime = 0;
+let totalWaitingTime = 0;
+let barChart, pieChart;
 
 document.getElementById("addProcess").addEventListener("click", function () {
     const processContainer = document.getElementById("processContainer");
     const newProcess = document.createElement("div");
     newProcess.classList.add("process");
 
-    // Dynamically add the arrivalTime and burstTime inputs with min="0" to prevent negative values
     newProcess.innerHTML = `
         <label for="arrivalTime${processCount}">Arrival Time (P${processCount + 1}):</label>
         <input type="number" id="arrivalTime${processCount}" name="arrivalTime${processCount}" min="0" required>
@@ -21,7 +19,6 @@ document.getElementById("addProcess").addEventListener("click", function () {
     processCount++;
 });
 
-// Show or hide additional inputs based on the selected algorithm
 document.getElementById("algorithm").addEventListener("change", function () {
     const selectedAlgorithm = this.value;
     const extraInputs = document.getElementById("extraInputs");
@@ -41,22 +38,19 @@ document.getElementById("algorithm").addEventListener("change", function () {
     }
 });
 
-// Handle form submission and ensure no negative values
 document.getElementById("schedulingForm").addEventListener("submit", function (event) {
     event.preventDefault();
 
-    // Clear previous results
     clearResultsTable();
-
-    // Gather process data and validate non-negative inputs
-    processesData = []; // Reset process data
+    processesData = [];
+    totalTurnaroundTime = 0;
+    totalWaitingTime = 0;
     let valid = true;
 
     for (let i = 0; i < processCount; i++) {
         const arrivalTime = parseInt(document.getElementById(`arrivalTime${i}`).value);
         const burstTime = parseInt(document.getElementById(`burstTime${i}`).value);
 
-        // Validation: Ensure arrivalTime and burstTime are not negative
         if (arrivalTime < 0 || burstTime < 0) {
             alert(`Arrival Time and Burst Time should not be less than 0 for Process P${i + 1}.`);
             valid = false;
@@ -65,141 +59,84 @@ document.getElementById("schedulingForm").addEventListener("submit", function (e
 
         const process = { process: `P${i + 1}`, arrivalTime, burstTime };
 
-        // Add priority if priority scheduling is selected
         if (document.getElementById("algorithm").value === "priority") {
             process.priority = parseInt(document.getElementById(`priority`).value);
         }
+
         processesData.push(process);
     }
 
-    if (!valid) {
-        return; // Stop further execution if invalid input is detected
-    }
+    if (!valid) return;
 
     const selectedAlgorithm = document.getElementById("algorithm").value;
 
-    // Execute the relevant scheduling algorithm
-    if (selectedAlgorithm === "fcfs") {
-        fcfs(processesData);
-    } else if (selectedAlgorithm === "sjf") {
-        sjf(processesData);
-    } else if (selectedAlgorithm === "rrs") {
-        const timeQuantum = parseInt(document.getElementById("timeQuantum").value);
-        rrs(processesData, timeQuantum);
-    } else if (selectedAlgorithm === "ljf") {
-        ljf(processesData);
-    } else if (selectedAlgorithm === "priority") {
-        priorityScheduling(processesData);
-    } else if (selectedAlgorithm === "lrtf") {
-        lrtf(processesData);
-    } else if (selectedAlgorithm === "srtf") {
-        srtf(processesData);
+    switch (selectedAlgorithm) {
+        case "fcfs":
+            fcfs(processesData);
+            break;
+        case "sjf":
+            sjf(processesData);
+            break;
+        case "rrs":
+            const timeQuantum = parseInt(document.getElementById("timeQuantum").value);
+            rrs(processesData, timeQuantum);
+            break;
+        case "ljf":
+            ljf(processesData);
+            break;
+        case "priority":
+            priorityScheduling(processesData);
+            break;
+        case "lrtf":
+            lrtf(processesData);
+            break;
+        case "srtf":
+            srtf(processesData);
+            break;
+        default:
+            break;
     }
 });
 
-// Clear previous results in the results table
+// Clear the results table
 function clearResultsTable() {
     const resultTable = document.getElementById("resultTable").getElementsByTagName("tbody")[0];
-    resultTable.innerHTML = ""; // Clear all rows
+    resultTable.innerHTML = "";
 }
 
-// FCFS Algorithm
-function fcfs(processes) {
-    processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
-    executeProcesses(processes);
-}
+let ganttChartData = []; // Array to store Gantt chart data
 
-// SJF Algorithm
-function sjf(processes) {
-    processes.sort((a, b) => a.burstTime - b.burstTime);
-    executeProcesses(processes);
-}
-
-// Round Robin Algorithm
-async function rrs(processes, timeQuantum) {
-    let queue = [...processes];
+// Execute processes and update results
+function executeProcesses(processes) {
     let currentTime = 0;
 
-    const executeNextProcess = async () => {
-        while (queue.length > 0) {
-            const process = queue.shift();
-            const executionTime = Math.min(timeQuantum, process.burstTime);
-            process.startTime = Math.max(currentTime, process.arrivalTime);
-            process.completionTime = process.startTime + executionTime;
-            process.turnaroundTime = process.completionTime - process.arrivalTime;
-            process.waitingTime = process.turnaroundTime - process.burstTime;
-
-            // Add to totals for average calculation
-            totalTurnaroundTime += process.turnaroundTime;
-            totalWaitingTime += process.waitingTime;
-
-            // Display the results
-            updateResultsTable(process);
-            currentTime += executionTime;
-
-            // Execute the process
-            await animateLoadingBar(process, executionTime);
-
-            // If there's remaining burst time, requeue the process
-            if (process.burstTime > timeQuantum) {
-                process.burstTime -= timeQuantum;
-                queue.push(process);
-            }
-        }
-        calculateAverages(processes.length); // Calculate averages after execution
-    };
-
-    await executeNextProcess();
-}
-
-// LJF Algorithm
-function ljf(processes) {
-    processes.sort((a, b) => b.burstTime - a.burstTime);
-    executeProcesses(processes);
-}
-
-// Priority Scheduling Algorithm
-function priorityScheduling(processes) {
-    processes.sort((a, b) => a.priority - b.priority);
-    executeProcesses(processes);
-}
-
-// LRTF Algorithm
-function lrtf(processes) {
-    processes.sort((a, b) => b.remainingTime - a.remainingTime);
-    executeProcesses(processes);
-}
-
-// SRTF Algorithm
-function srtf(processes) {
-    processes.sort((a, b) => a.remainingTime - b.remainingTime);
-    executeProcesses(processes);
-}
-
-// Execute the processes and update results table
-async function executeProcesses(processes) {
-    let currentTime = 0;
-
-    for (const process of processes) {
+    processes.forEach(process => {
         process.startTime = Math.max(currentTime, process.arrivalTime);
         process.completionTime = process.startTime + process.burstTime;
         process.turnaroundTime = process.completionTime - process.arrivalTime;
         process.waitingTime = process.turnaroundTime - process.burstTime;
 
-        // Add to totals for average calculation
+        // Store data for Gantt Chart
+        ganttChartData.push({
+            process: process.process,
+            startTime: process.startTime,
+            endTime: process.completionTime
+        });
+
         totalTurnaroundTime += process.turnaroundTime;
         totalWaitingTime += process.waitingTime;
 
         updateResultsTable(process);
         currentTime = process.completionTime;
+    });
 
-        // Animate the loading bar for this process
-        await animateLoadingBar(process, process.burstTime);
-    }
-    calculateAverages(processes.length); // Calculate averages after execution
+    calculateAverages(processes.length);
+    renderChart(processes);
+    renderPieChart(processes);
+    renderGanttChart(); // Call to render Gantt chart after processes execution
 }
 
-// Update the results table after process completion
+// Update results table
 function updateResultsTable(process) {
     const resultTable = document.getElementById("resultTable").getElementsByTagName("tbody")[0];
     const row = resultTable.insertRow();
@@ -207,83 +144,48 @@ function updateResultsTable(process) {
         <td>${process.process}</td>
         <td>${process.arrivalTime}</td>
         <td>${process.burstTime}</td>
-        <td>${process.startTime}</td>
         <td>${process.completionTime}</td>
         <td>${process.turnaroundTime}</td>
         <td>${process.waitingTime}</td>
-        <td>${process.priority || "-"}</td>
-        <td>
-            <div class="loading-bar">
-                <div class="progress" style="width: 0;"></div>
-            </div>
-        </td>
+        <td>${process.priority !== undefined ? process.priority : 'N/A'}</td>
     `;
 }
 
-// Function to animate the loading bar
-function animateLoadingBar(process, totalTime) {
-    return new Promise((resolve) => {
-        const row = document.querySelector(`#resultTable tbody tr:last-child`);
-        const progressBar = row.querySelector(".progress");
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += (100 / totalTime); // Increase progress based on total time
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                resolve();
-            }
-            progressBar.style.width = progress + "%"; // Update the loading bar width
-        }, 1000); // Update every second
-    });
-}
-
-// Calculate averages and update the display
+// Calculate averages
 function calculateAverages(processCount) {
     const avgTurnaroundTime = totalTurnaroundTime / processCount;
     const avgWaitingTime = totalWaitingTime / processCount;
 
-    // Update averages in the UI
     document.getElementById("avgTurnaroundTime").innerText = `Average Turnaround Time: ${avgTurnaroundTime.toFixed(2)}`;
     document.getElementById("avgWaitingTime").innerText = `Average Waiting Time: ${avgWaitingTime.toFixed(2)}`;
-
-    // Call function to render the chart
-    renderChart(processesData); // Pass processes data to render the chart
 }
 
-// Function to render the chart
+// Render bar chart with reduced height and narrower bars
 function renderChart(processes) {
     const ctx = document.getElementById("performanceChart").getContext("2d");
 
-    // Prepare data for the chart
-    const labels = processes.map(p => p.process); // Labels for each process
-    const turnaroundTimes = processes.map(p => p.turnaroundTime); // Turnaround times for each process
-    const waitingTimes = processes.map(p => p.waitingTime); // Waiting times for each process
+    const labels = processes.map(p => p.process);
+    const turnaroundTimes = processes.map(p => p.turnaroundTime);
+    const waitingTimes = processes.map(p => p.waitingTime);
 
-    // Destroy previous chart instance if it exists
-    if (window.performanceChart) {
-        window.performanceChart.destroy();
+    if (barChart) {
+        barChart.destroy(); // Destroy previous chart instance to update it dynamically
     }
 
-    // Create a new chart
-    window.performanceChart = new Chart(ctx, {
+    barChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels,
             datasets: [
                 {
                     label: 'Turnaround Time',
                     data: turnaroundTimes,
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
                 },
                 {
                     label: 'Waiting Time',
                     data: waitingTimes,
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
                 }
             ]
         },
@@ -292,7 +194,210 @@ function renderChart(processes) {
                 y: {
                     beginAtZero: true
                 }
+            },
+            responsive: true,
+            maintainAspectRatio: false, // Allows us to set a fixed height
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 10,
+                }
+            },
+            barPercentage: 0.4,  // Reduces the width of the bars
+            categoryPercentage: 0.6, // Adjusts the space between categories (bars)
+        }
+    });
+
+    // Reduce the size of the canvas to lower the bar chart height
+    document.getElementById("performanceChart").style.height = "200px"; // Adjust the height as needed
+}
+
+// Render pie chart with reduced size
+function renderPieChart(processes) {
+    const ctx = document.getElementById("pieChart").getContext("2d");
+
+    const labels = processes.map(p => p.process);
+    const burstTimes = processes.map(p => p.burstTime);
+
+    if (pieChart) {
+        pieChart.destroy();
+    }
+
+    pieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Burst Time',
+                data: burstTimes,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Allows us to control size
+            layout: {
+                padding: {
+                    top: 5,
+                    bottom: 5,
+                }
             }
         }
     });
+
+    // Reduce the size of the canvas to make the pie chart smaller
+    document.getElementById("pieChart").style.width = "300px";
+    document.getElementById("pieChart").style.height = "300px";
+}
+
+// FCFS Scheduling
+function fcfs(processes) {
+    processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+    executeProcesses(processes);
+}
+
+// SJF Scheduling
+function sjf(processes) {
+    processes.sort((a, b) => a.burstTime - b.burstTime);
+    executeProcesses(processes);
+}
+
+// Updated Round Robin Scheduling
+function rrs(processes, timeQuantum) {
+    let queue = [...processes];
+    let currentTime = 0;
+    let executionSegments = []; // Store execution segments for Gantt chart
+
+    // Initialize remaining time for each process
+    queue.forEach(process => {
+        process.remainingTime = process.burstTime; // Add this line
+    });
+
+    while (queue.length > 0) {
+        const currentProcess = queue.shift();
+
+        // If the process has arrived, execute it
+        if (currentProcess.arrivalTime <= currentTime) {
+            const executionTime = Math.min(currentProcess.remainingTime, timeQuantum);
+            currentProcess.startTime = currentTime;
+            currentTime += executionTime;
+            currentProcess.remainingTime -= executionTime;
+
+            // Record the execution segment for Gantt chart
+            executionSegments.push({
+                process: currentProcess.process,
+                startTime: currentProcess.startTime,
+                endTime: currentTime
+            });
+
+            // If the process has finished executing
+            if (currentProcess.remainingTime === 0) {
+                currentProcess.completionTime = currentTime;
+                currentProcess.turnaroundTime = currentProcess.completionTime - currentProcess.arrivalTime;
+                currentProcess.waitingTime = currentProcess.turnaroundTime - currentProcess.burstTime;
+
+                totalTurnaroundTime += currentProcess.turnaroundTime; // Accumulate totals
+                totalWaitingTime += currentProcess.waitingTime;
+
+                updateResultsTable(currentProcess); // Add results to table
+            } else {
+                queue.push(currentProcess); // Re-add the process if it's not finished
+            }
+        } else {
+            currentTime++; // Increment time if no process is ready
+            queue.push(currentProcess); // Re-add the current process if it hasn't arrived yet
+        }
+    }
+
+    // Store the execution segments for Gantt chart rendering
+    ganttChartData = executionSegments; // Use executionSegments for rendering Gantt chart
+
+    // Calculate averages and render charts after processing
+    calculateAverages(processes.length);
+    renderChart(processes);
+    renderPieChart(processes);
+    renderGanttChart(executionSegments); // Pass execution segments to render Gantt chart
+}
+
+// Render Gantt Chart
+function renderGanttChart(executionSegments) {
+    const ganttChartContainer = document.getElementById("ganttChart");
+    ganttChartContainer.innerHTML = ""; // Clear previous chart
+
+    // Calculate the maximum time for chart width
+    const maxTime = Math.max(...executionSegments.map(seg => seg.endTime));
+    const chartWidth = maxTime * 20; // Width for each time unit
+    ganttChartContainer.style.width = `${chartWidth}px`;
+    ganttChartContainer.style.position = "relative"; // Set position relative for absolute positioning of blocks
+    ganttChartContainer.style.margin = "0"; // Align to the left by removing auto margins
+
+    // Create and display Gantt chart blocks
+    executionSegments.forEach(seg => {
+        const processBlock = document.createElement("div");
+        processBlock.style.position = "absolute";
+        processBlock.style.left = `${seg.startTime * 20}px`; // Adjust based on time unit width
+        processBlock.style.width = `${(seg.endTime - seg.startTime) * 20 - 4}px`; // Width with separation
+        processBlock.style.height = "30px"; // Height of the block
+        processBlock.style.border = "1px solid blue"; // Border for visibility
+        processBlock.style.backgroundColor = "rgba(75, 192, 192, 1)"; // Make background opaque
+        processBlock.style.lineHeight = "30px"; // Center text vertically
+        processBlock.style.textAlign = "center"; // Center text horizontally
+        processBlock.style.fontWeight = "bold"; // Bold text for visibility
+        processBlock.innerText = seg.process; // Process name
+
+        ganttChartContainer.appendChild(processBlock);
+        
+        // Create the time label below the process block
+        const timeLabel = document.createElement("div");
+        timeLabel.style.position = "absolute";
+        timeLabel.style.left = `${seg.startTime * 20}px`; // Match the process block's left position
+        timeLabel.style.width = `${(seg.endTime - seg.startTime) * 20 - 4}px`; // Match the width of the block
+        timeLabel.style.textAlign = "center"; // Center text horizontally
+        timeLabel.style.marginTop = "35px"; // Space between block and label
+        timeLabel.style.fontWeight = "bold"; // Bold text for visibility
+        timeLabel.innerText = `${seg.startTime}-${seg.endTime}`; // Time range format
+
+        ganttChartContainer.appendChild(timeLabel);
+    });
+}
+
+// Function to get a random color
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+// Priority Scheduling
+function priorityScheduling(processes) {
+    processes.sort((a, b) => a.priority - b.priority);
+    executeProcesses(processes);
+}
+
+// Longest Job First (LJF) Scheduling
+function ljf(processes) {
+    processes.sort((a, b) => b.burstTime - a.burstTime);
+    executeProcesses(processes);
+}
+
+// Longest Remaining Time First (LRTF) Scheduling
+function lrtf(processes) {
+    processes.sort((a, b) => b.remainingBurstTime - a.remainingBurstTime);
+    executeProcesses(processes);
+}
+
+// Shortest Remaining Time First (SRTF) Scheduling
+function srtf(processes) {
+    processes.sort((a, b) => a.remainingBurstTime - b.remainingBurstTime);
+    executeProcesses(processes);
 }
