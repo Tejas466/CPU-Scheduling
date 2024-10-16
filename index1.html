@@ -6,7 +6,7 @@
     <title>CPU Scheduling Visualization</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Additional styles for chart and averages */
+
         #chartContainer {
             width: 100%;
             height: 400px;
@@ -18,17 +18,14 @@
             font-size: 18px;
         }
 
-        /* Styles for pie chart container */
         #pieChartContainer {
             margin-top: 20px;
         }
 
-        /* Styles for Gantt chart container */
         #ganttChartContainer {
             margin-top: 20px;
         }
     </style>
-    <!-- Add Chart.js library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -42,8 +39,6 @@
                 <option value="rrs">Round Robin Scheduling (RRS)</option>
                 <option value="ljf">Longest Job First (LJF)</option>
                 <option value="priority">Priority Scheduling</option>
-                <!-- <option value="lrtf">Longest Remaining Time First (LRTF)</option>
-                <option value="srtf">Shortest Remaining Time First (SRTF)</option> -->
             </select>
 
             <div id="extraInputs" style="display: none;">
@@ -52,8 +47,6 @@
                     <input type="number" id="timeQuantum" name="timeQuantum">
                 </div>
                 <div id="priorityInput" class="conditionalInput">
-                    <label for="priority">Priority (for Priority Scheduling):</label>
-                    <input type="number" id="priority" name="priority">
                 </div>
             </div>
 
